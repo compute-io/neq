@@ -1,6 +1,6 @@
 {
   "name": "compute-neq",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Computes an element-wise comparison (not equal) of an array.",
   "author": {
     "name": "Athan Reines",
