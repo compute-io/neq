@@ -216,22 +216,57 @@ bool = ( mat === out );
 ## Examples
 
 ``` javascript
-var neq = require( 'compute-neq' ),
+var matrix = require( 'dstructs-matrix' ),
+	neq = require( 'compute-neq' ),
 	sum = require( 'compute-sum' );
 
-// Simulate some data...
-var data = new Array( 100 );
+var data,
+	mat,
+	out,
+	tmp,
+	i;
 
-for ( var i = 0; i < data.length; i++ ) {
+// Plain arrays...
+data = new Array( 100 );
+for ( i = 0; i < data.length; i++ ) {
 	data[ i ] = Math.round( Math.random()*20 );
 }
-
-var out = neq( data, 10 );
+out = neq( data, 10 );
+console.log( 'Arrays: %s\n', out );
 
 // Count the number of values not equal to 10...
 var count = sum( out );
 
-console.log( 'Total: %d', count );
+// Object arrays (accessors)...
+function getValue( d ) {
+	return d.x;
+}
+for ( i = 0; i < data.length; i++ ) {
+	data[ i ] = {
+		'x': data[ i ]
+	};
+}
+out = neq( data, 10, {
+	'accessor': getValue
+});
+
+// Typed arrays...
+data = new Float64Array( 100 );
+for ( i = 0; i < data.length; i++ ) {
+	data[ i ] = Math.round( Math.random()*20 );
+}
+tmp = neq( data, 10 );
+out = '';
+for ( i = 0; i < data.length; i++ ) {
+	out += tmp[ i ];
+	if ( i < data.length-1 ) {
+		out += ',';
+	}
+}
+
+// Matrices...
+mat = matrix( data, [10,10], 'float64' );
+out = neq( mat, 10 );
 ```
 
 To run the example code from the top-level application directory,
