@@ -1,9 +1,16 @@
+/* global require, describe, it */
 'use strict';
 
 // MODULES //
 
 var // Expectation library:
 	chai = require( 'chai' ),
+
+	// Matrix data structure:
+	matrix = require( 'dstructs-matrix' ),
+
+	// Cast arrays to a different data type
+	cast = require( 'compute-cast-arrays' ),
 
 	// Module to be tested:
 	neq = require( './../lib' );
@@ -23,191 +30,270 @@ describe( 'compute-neq', function tests() {
 		expect( neq ).to.be.a( 'function' );
 	});
 
-	it( 'should throw an error if not provided an array', function test() {
+	it( 'should throw an error if provided an invalid accessor option', function test() {
 		var values = [
 			'5',
 			5,
-			null,
-			undefined,
-			NaN,
 			true,
-			{},
-			function(){}
+			undefined,
+			null,
+			NaN,
+			[],
+			{}
 		];
 
 		for ( var i = 0; i < values.length; i++ ) {
 			expect( badValue( values[i] ) ).to.throw( TypeError );
 		}
-
 		function badValue( value ) {
 			return function() {
-				neq( value, 10 );
+				neq( [1,2,3], 1, {
+					'accessor': value
+				});
 			};
 		}
 	});
 
-	it( 'should not throw an error for any comparison value', function test() {
-		var values = [
-			'5',
-			5,
-			null,
-			undefined,
-			NaN,
-			true,
-			[],
-			{},
-			function(){}
+	it( 'should compare two primitives for not being equal', function test() {
+		assert.strictEqual( neq( 1, '1', {
+			'strict': false
+		}), 0 );
+		assert.strictEqual( neq( 1, '1', {
+			'strict': true
+		}), 1 );
+	});
+
+	it( 'should perform an element-wise not-equal check for a plain array', function test() {
+		var data, actual, expected;
+
+		data = [ 0, 1, 2, 3 ];
+		expected = [
+			1,
+			1,
+			0,
+			1
 		];
 
-		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.not.throw( TypeError );
-		}
+		actual = neq( data, 2 );
+		assert.notEqual( actual, data );
 
-		function badValue( value ) {
-			return function() {
-				neq( [], value );
-			};
-		}
+		assert.deepEqual( actual, expected );
+
+		// Mutate...
+		actual = neq( data, 2, {
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+
 	});
 
-	it( 'should throw an error if provided a non-object for options', function test() {
-		var values = [
-			'5',
-			5,
-			null,
-			undefined,
-			NaN,
-			[],
-			true,
-			function(){}
+	it( 'should perform an element-wise not-equal check when provided a plain array and another array', function test() {
+		var data, actual, expected, y;
+
+		data = [ null, 2, 3, null ];
+		y = [ null, 2, 1, 1 ];
+		expected = [
+			0,
+			0,
+			1,
+			1
 		];
 
-		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.throw( TypeError );
-		}
+		actual = neq( data, y );
+		assert.notEqual( actual, data );
 
-		function badValue( value ) {
-			return function() {
-				neq( [], 10, value );
-			};
-		}
+		assert.deepEqual( actual, expected );
+
+		// Mutate...
+		actual = neq( data, y, {
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+
 	});
 
-	it( 'should throw an error if provided a non-boolean for the strict option', function test() {
-		var values = [
-			'5',
-			5,
-			null,
-			undefined,
-			NaN,
-			[],
-			{},
-			function(){}
+	it( 'should perform an element-wise not-equal check when provided a typed array', function test() {
+		var data, actual, expected;
+
+		data = new Int8Array( [ 0, 1, 2, 1 ] );
+
+		expected = new Uint8Array( [
+			1,
+			0,
+			1,
+			0
+		]);
+
+		actual = neq( data, 1 );
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Mutate:
+		actual = neq( data, 1, {
+			'copy': false
+		});
+		expected = new Int8Array( [ 1, 0, 1, 0 ] );
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+	});
+
+	it( 'should perform an element-wise not-equal check when provided two typed arrays', function test() {
+		var data, actual, expected, y;
+
+		data = new Int8Array( [ 2, 3, 4, 5 ] );
+		y = new Int32Array( [ 2, 3, 4, 5 ] );
+
+		expected = new Uint8Array( [
+			0,
+			0,
+			0,
+			0
+		]);
+
+		actual = neq( data, y );
+		assert.notEqual( actual, data );
+		assert.deepEqual( actual, expected );
+
+		// Mutate:
+
+		actual = neq( data, y, {
+			'copy': false
+		});
+		expected = new Int8Array( [ 0, 0, 0, 0 ] );
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+	});
+
+	it( 'should perform an element-wise not-equal check using an accessor', function test() {
+		var data, actual, expected;
+
+		data = [
+			[3,true],
+			[4,1],
+			[5,'1'],
+			[6,2]
 		];
 
-		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.throw( TypeError );
-		}
-
-		function badValue( value ) {
-			return function() {
-				neq( [], 10, {'strict': value} );
-			};
-		}
-	});
-
-	it( 'should throw an error if provided a non-boolean for the array option', function test() {
-		var values = [
-			'5',
-			5,
-			null,
-			undefined,
-			NaN,
-			[],
-			{},
-			function(){}
+		expected = [
+			0,
+			0,
+			0,
+			1
 		];
 
-		for ( var i = 0; i < values.length; i++ ) {
-			expect( badValue( values[i] ) ).to.throw( TypeError );
+		actual = neq( data, 1, {
+			'accessor': getValue,
+			'strict': false
+		});
+		assert.notEqual( actual, data );
+
+		assert.deepEqual( actual, expected );
+
+		// Mutate:
+		actual = neq( data, 1, {
+			'accessor': getValue,
+			'strict': false,
+			'copy': false
+		});
+		assert.strictEqual( actual, data );
+
+		assert.deepEqual( data, expected );
+
+		function getValue( d ) {
+			return d[ 1 ];
+		}
+	});
+
+	it( 'should perform an element-wise not-equal check for two object arrays using an accessor', function test() {
+		var data, actual, expected, y;
+
+		data = [
+			{'x':0},
+			{'x':1},
+			{'x':2},
+			{'x':3}
+		];
+
+		y = [
+			{'y':0},
+			{'y':1},
+			{'y':2},
+			{'y':3}
+		];
+
+		actual = neq( data, y, {
+			'accessor': getValue
+		});
+
+		expected = [
+			0,
+			0,
+			0,
+			0
+		];
+
+		assert.deepEqual( actual, expected );
+
+		function getValue( d, i, j ) {
+			if ( j === 0 ) {
+				return d.x;
+			} else {
+				return d.y;
+			}
 		}
 
-		function badValue( value ) {
-			return function() {
-				neq( [], 10, {'array': value} );
-			};
+	});
+
+	it( 'should perform an element-wise not-equal check when provided a matrix', function test() {
+		var mat,
+			out,
+			d1,
+			d2,
+			d3,
+			i;
+
+		d1 = new Int32Array( 100 );
+		d2 = new Uint8Array( 100 );
+		d3 = new Uint8Array( 100 );
+		for ( i = 0; i < d1.length; i++ ) {
+			d1[ i ] = i;
+			d2[ i ] = ( i === 50 ) ? 0 : 1;
+			d3[ i ] = 0;
 		}
+
+		// element-wise not-equal check of matrix and scalar
+		mat = matrix( d1, [10,10], 'int32' );
+		out = neq( mat, 50 );
+
+		assert.deepEqual( out.data, d2 );
+
+		// element-wise not-equal check of two matrices
+		mat = matrix( d1, [10,10], 'int32' );
+		out = neq( mat, mat );
+
+		assert.deepEqual( out.data, d3 );
+
+		// not-equal check of matrix and scalar and mutate...
+		out = neq( mat, 50, {
+			'copy': false
+		});
+
+		assert.strictEqual( mat, out );
+		assert.deepEqual( mat.data, cast( d2, 'int32' ) );
 	});
 
-	it( 'should correctly compare values (non-strict)', function test() {
-		var data, expected, actual, tmp, opts;
 
-		opts = { 'strict': false };
-
-		tmp = [ 1, 2 ];
-		data = [ 0, false, true, null, 5, 'a', tmp ];
-
-		// Single comparison value:
-		actual = neq( data, false, opts );
-		expected = [ 0, 0, 1, 1, 1, 1, 1 ];
-
-		assert.deepEqual( actual, expected );
-
-		// Array of comparison values:
-		actual = neq( data, [ false, 0, 1, undefined, '5', 4, tmp ], opts );
-		expected = [ 0, 0, 0, 0, 0, 1, 0 ];
-
-		assert.deepEqual( actual, expected );
-	});
-
-	it( 'should correctly compare values (strict)', function test() {
-		var data, expected, actual, tmp;
-
-		tmp = [ 1, 2 ];
-		data = [ 0, false, true, null, 5, 'a', tmp ];
-
-		// Single comparison value:
-		actual = neq( data, false );
-		expected = [ 1, 0, 1, 1, 1, 1, 1 ];
-
-		assert.deepEqual( actual, expected );
-
-		actual = neq( data, tmp );
-		expected = [ 1, 1, 1, 1, 1, 1, 0 ];
-
-		assert.deepEqual( actual, expected );
-
-		// Array of comparison values:
-		actual = neq( data, [ false, 0, true, undefined, '5', 4, tmp ] );
-		expected = [ 1, 1, 0, 1, 1, 1, 0 ];
-
-		assert.deepEqual( actual, expected );
-	});
-
-	it( 'should treat an equal length comparison array as a single comparison element when the array option is true', function test() {
-		var data, expected, actual, tmp;
-
-		tmp = [ 1, 2 ];
-		data = [ tmp, 'foo' ];
-
-		// Strict mode:
-		actual = neq( data, tmp, {'array':true} );
-		expected = [ 0, 1 ];
-
-		assert.deepEqual( actual, expected );
-
-		// Non-strict mode:
-		actual = neq( data, tmp, {'array':true, 'strict': false} );
-		expected = [ 0, 1 ];
-
-		assert.deepEqual( actual, expected );
-	});
-
-	it( 'should return an empty array if provided an empty array', function test() {
-		var actual = neq( [], 10 ),
-			expected = [];
-
-		assert.deepEqual( actual, expected );
+	it( 'should return an empty data structure if provided an empty data structure', function test() {
+		assert.deepEqual( neq( [], 1 ), [] );
+		assert.deepEqual( neq( matrix( [0,0] ), 1 ).data, matrix( [0,0], 'uint8' ).data );
+		assert.deepEqual( neq( new Int8Array(), 1 ), new Uint8Array() );
 	});
 
 });
