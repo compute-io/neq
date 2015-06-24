@@ -23,7 +23,7 @@ var neq = require( 'compute-neq' );
 
 #### neq( x, y[, opts] )
 
-Computes an element-wise comparison (equality). `x` can be an [`array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array), a [`typed array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays) a [`matrix`](https://github.com/dstructs/matrix) or any single value. `y` has to be either an `array` or `matrix` of equal dimensions as `x` or any other value. Correspondingly, the function returns either an `array` with length equal to that of the input `array`, a `matrix` with equal dimensions as input `x` or a single value. Each output element is either `0` or `1`. A value of `1` means that an element is __not__ equal to the compared value  and `0` means that an element is equal to the compared value.
+Computes an element-wise comparison (equality). `x` can be an [`array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array), a [`typed array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays), [`matrix`](https://github.com/dstructs/matrix) or any single value. `y` has to be either an `array` or `matrix` of equal dimensions as `x` or any other value. Correspondingly, the function returns either an `array` with length equal to that of the input `array`, a `matrix` with equal dimensions as input `x` or a single value. Each output element is either `0` or `1`. A value of `1` means that an element is __not__ equal to the compared value  and `0` means that an element is equal to the compared value.
 
 ``` javascript
 var matrix = require( 'dstructs-matrix' ),
